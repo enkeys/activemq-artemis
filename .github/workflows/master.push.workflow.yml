@@ -1,10 +1,12 @@
-name: "Build"
+name: Push to the main repository
 
-on: [push, pull_request]
-
+on:
+  push:
+    branches:
+      - master
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -35,4 +37,17 @@ jobs:
           mvn -Dorg.apache.activemq.artemis.core.io.aio.AIOSequentialFileFactory.DISABLED=AnythingNotNull -Djdk8-errorprone -Pfast-tests -Pextra-tests -Ptests-CI -B install -q
           cd examples
           mvn install -PnoRun -B -q
+
+    #  - name: Execute tests
+    #  - name: Upload image with tag :dev to image registry
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1
+        with:
+          username: username
+          password: ${{ secrets.QUAY_PASSWORD }}
+          registry: quay.io
+          repository: artemiscloud/activemq-artemis
+          path: ./artemis-docker/
+          dockerfile: Dockerfile-centos
+          tags: dev
 

@@ -31,23 +31,27 @@ jobs:
       # use 'install' so smoke-tests will work
       # use '-Pextra-tests' to ensure extra-tests compiles even though they won't actually run
       # By setting anything to org.apache.activemq.artemis.core.io.aio.AIOSequentialFileFactory.DISABLED we are disabling libaio loading on the testsuite
-      - name: Build
+      - name: Build Artemis
         run: |
           set -e
           mvn -Dorg.apache.activemq.artemis.core.io.aio.AIOSequentialFileFactory.DISABLED=AnythingNotNull -Djdk8-errorprone -Pfast-tests -Pextra-tests -Ptests-CI -B install -q
+
+      - name: Build Artemis Examples
+        run: |
           cd examples
           mvn install -PnoRun -B -q
 
-    #  - name: Execute tests
-    #  - name: Upload image with tag :dev to image registry
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
       - name: Build and push Docker images
         uses: docker/build-push-action@v1
         with:
-          username: username
+          username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_PASSWORD }}
           registry: quay.io
-          repository: artemiscloud/activemq-artemis
+          repository: enkeys/activemq-artemis
           path: ./artemis-docker/
           dockerfile: Dockerfile-centos
           tags: dev
-
